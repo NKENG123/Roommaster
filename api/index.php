@@ -9,7 +9,6 @@ try {
 
     // Créer les dossiers nécessaires dans /tmp
     $dirs = [
-        '/tmp/.env',
         '/tmp/storage/logs',
         '/tmp/storage/framework/sessions',
         '/tmp/storage/framework/views',
@@ -18,11 +17,12 @@ try {
     ];
 
     foreach ($dirs as $dir) {
-        if (str_ends_with($dir, '.env')) {
-            if (!file_exists($dir)) file_put_contents($dir, '');
-        } else {
-            if (!is_dir($dir)) mkdir($dir, 0777, true);
-        }
+        if (!is_dir($dir)) mkdir($dir, 0777, true);
+    }
+
+    // Créer .env vide dans /tmp
+    if (!file_exists('/tmp/.env')) {
+        file_put_contents('/tmp/.env', '');
     }
 
     define('LARAVEL_START', microtime(true));
@@ -30,10 +30,9 @@ try {
 
     $app = require_once __DIR__ . '/../bootstrap/app.php';
 
-    // Rediriger vers /tmp
+    // Rediriger uniquement storage et .env vers /tmp
     $app->useEnvironmentPath('/tmp');
     $app->useStoragePath('/tmp/storage');
-    $app->bootstrapPath('/tmp/bootstrap');
 
     $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
     $response = $kernel->handle(
