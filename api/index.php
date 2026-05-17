@@ -1,23 +1,39 @@
 <?php
 
 try {
-    // Charger toutes les variables d'environnement Vercel
+    // Charger les variables d'environnement Vercel
     foreach (getenv() as $key => $value) {
         $_ENV[$key] = $value;
         $_SERVER[$key] = $value;
     }
 
-    // Créer un faux .env vide dans /tmp
-    $envFile = '/tmp/.env';
-    if (!file_exists($envFile)) {
-        file_put_contents($envFile, '');
+    // Créer les dossiers nécessaires dans /tmp
+    $dirs = [
+        '/tmp/.env',
+        '/tmp/storage/logs',
+        '/tmp/storage/framework/sessions',
+        '/tmp/storage/framework/views',
+        '/tmp/storage/framework/cache/data',
+        '/tmp/bootstrap/cache',
+    ];
+
+    foreach ($dirs as $dir) {
+        if (str_ends_with($dir, '.env')) {
+            if (!file_exists($dir)) file_put_contents($dir, '');
+        } else {
+            if (!is_dir($dir)) mkdir($dir, 0777, true);
+        }
     }
 
     define('LARAVEL_START', microtime(true));
     require __DIR__ . '/../vendor/autoload.php';
 
     $app = require_once __DIR__ . '/../bootstrap/app.php';
+
+    // Rediriger vers /tmp
     $app->useEnvironmentPath('/tmp');
+    $app->useStoragePath('/tmp/storage');
+    $app->bootstrapPath('/tmp/bootstrap');
 
     $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
     $response = $kernel->handle(
