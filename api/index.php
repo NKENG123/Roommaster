@@ -7,7 +7,7 @@ try {
         $_SERVER[$key] = $value;
     }
 
-    // Créer les dossiers nécessaires dans /tmp
+    // Nettoyer et recréer les dossiers dans /tmp
     $dirs = [
         '/tmp/storage/logs',
         '/tmp/storage/framework/sessions',
@@ -20,6 +20,14 @@ try {
         if (!is_dir($dir)) mkdir($dir, 0777, true);
     }
 
+    // Supprimer les caches corrompus
+    $cacheFiles = glob('/tmp/bootstrap/cache/*.php');
+    if ($cacheFiles) {
+        foreach ($cacheFiles as $file) {
+            unlink($file);
+        }
+    }
+
     // Créer .env vide dans /tmp
     if (!file_exists('/tmp/.env')) {
         file_put_contents('/tmp/.env', '');
@@ -28,9 +36,12 @@ try {
     define('LARAVEL_START', microtime(true));
     require __DIR__ . '/../vendor/autoload.php';
 
-    $app = require_once __DIR__ . '/../bootstrap/app.php';
+    // Pointer le bootstrap/cache vers /tmp
+    if (!defined('APP_BOOTSTRAP_PATH')) {
+        define('APP_BOOTSTRAP_PATH', '/tmp/bootstrap');
+    }
 
-    // Rediriger uniquement storage et .env vers /tmp
+    $app = require_once __DIR__ . '/../bootstrap/app.php';
     $app->useEnvironmentPath('/tmp');
     $app->useStoragePath('/tmp/storage');
 
