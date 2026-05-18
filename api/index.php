@@ -1,14 +1,12 @@
 <?php
 
 try {
-    // 1. Charger les vars Vercel EN PREMIER
     foreach (getenv() as $key => $value) {
         $_ENV[$key] = $value;
         $_SERVER[$key] = $value;
         putenv("$key=$value");
     }
 
-    // 2. Créer les dossiers dans /tmp
     $dirs = [
         '/tmp/storage/logs',
         '/tmp/storage/framework/sessions',
@@ -20,7 +18,6 @@ try {
         if (!is_dir($dir)) mkdir($dir, 0777, true);
     }
 
-    // 3. Créer un vrai .env dans /tmp avec toutes les variables
     $envContent = '';
     foreach ($_ENV as $key => $value) {
         $value = str_replace('"', '\\"', $value);
@@ -28,7 +25,6 @@ try {
     }
     file_put_contents('/tmp/.env', $envContent);
 
-    // 4. Lancer Laravel
     define('LARAVEL_START', microtime(true));
     require __DIR__ . '/../vendor/autoload.php';
 
